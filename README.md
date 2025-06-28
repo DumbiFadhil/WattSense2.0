@@ -1,264 +1,189 @@
-# Artificial Intelligence menggunakan Golang
+# WattSense 2.0 Backend
 
-## Final Project AI-Powered Smart Home Energy Management System
+Welcome to the backend repository for **WattSense 2.0**, an AI-powered Smart Home Energy Management System. This service is responsible for handling data ingestion, AI-driven analytics, and providing a robust API for the frontend and other clients.
 
-### Description
+> **Note**: This is the backend codebase for [@DumbiFadhil/WattSense2.0](https://github.com/DumbiFadhil/WattSense2.0). The frontend is maintained in a separate repository: [@DumbiFadhil/WattSenseFE](https://github.com/DumbiFadhil/WattSenseFE).
 
-Kamu akan mengembangkan Sistem Manajemen Energi Rumah Pintar menggunakan Golang dan [model AI Tapas](https://huggingface.co/google/tapas-base-finetuned-wtq) dari Huggingface Model Hub. Sistem ini akan memprediksi dan mengelola penggunaan energi dalam lingkungan rumah pintar. Aplikasi ini akan menerima data tentang penggunaan energi rumah dan memberikan wawasan dan rekomendasi tentang cara mengoptimalkan konsumsi energi.
+---
 
-Sistem Manajemen Energi ini merupakan sebuah Web App server yang dibangun menggunakan Golang. Dimana sistem menerima input berupa satu file dengan format CSV yang berisi penggunaan energi di rumah. Kita asumsikan data ini dikirim oleh server IoT yang dimiliki di rumah.
+## Table of Contents
 
-Dari data yang diupload tersebut maka kita bisa berkonsultasi terkait penggunaan and potensi penghematan energi dengan sebuah chatbot.
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [API Reference](#api-reference)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Project Structure](#project-structure)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-Fitur:
+---
 
-- Prediksi Konsumsi Energi: Sistem ini akan memprediksi konsumsi energi rumah berdasarkan data historis.
+## Overview
 
-- Rekomendasi Penghematan Energi: Sistem ini akan memberikan rekomendasi tentang cara menghemat energi berdasarkan konsumsi energi yang diprediksi.
+WattSense 2.0 backend is a Golang-based web server that enables users to upload energy consumption data, receive AI-driven analysis and recommendations, and interact with a conversational AI assistant for smart energy management.
 
-Data input dalam bentuk format CSV dengan kolom berikut:
+- **Data Input**: CSV files containing timestamped appliance-level energy usage.
+- **AI Integration**: Leverages HuggingFace models (`tapas-base-finetuned-wtq` for tabular data, and optionally chat models such as `microsoft/Phi-3.5-mini-instruct`).
+- **RESTful API**: Exposes endpoints for file upload, data analysis, and chatbot interaction.
 
-- Date: Tanggal data penggunaan energi.
-- Time: Waktu data penggunaan energi.
-- Appliance: Nama alat.
-- Energy_Consumption: Konsumsi energi alat dalam kWh.
-- Room: Ruang tempat alat berada.
-- Status: Status alat (On/Off).
+---
 
-Contoh:
+## Features
 
-```txt
-Date,Time,Appliance,Energy_Consumption,Room,Status
-2022-01-01,00:00,Refrigerator,1.2,Kitchen,On
-2022-01-01,01:00,Refrigerator,1.2,Kitchen,On
-...
-2022-01-01,08:00,TV,0.8,Living Room,Off
-2022-01-01,09:00,TV,0.8,Living Room,On
-2022-01-01,10:00,TV,0.8,Living Room,On
-...
+- **CSV Data Upload**: Accepts household energy usage data in a standardized format.
+- **AI Analytics**: Predicts future energy consumption and provides personalized saving recommendations.
+- **Chatbot**: Answers natural language questions about your data and energy usage.
+- **Modular Design**: Easily extend or swap AI models and services.
+
+---
+
+## Architecture
+
+- **main.go**: API server and route definitions.
+- **model/model.go**: Data structures for CSV records, chat messages, and AI responses.
+- **repository/fileRepository.go**: File handling utilities (upload, read, write).
+- **service/file_service.go**: File processing and CSV parsing.
+- **service/ai_service.go**: AI model interaction (table QA, chatbot).
+
+---
+
+## API Reference
+
+### `POST /upload`
+Upload a CSV file containing energy usage data. The backend parses and analyzes the file; returns summary statistics and a preview.
+
+- **Request**: `multipart/form-data` with a file field.
+- **Response**:  
+  ```json
+  {
+    "status": "success",
+    "summary": {
+      "totalEnergy": 123.4,
+      "topAppliances": [...],
+      ...
+    }
+  }
+  ```
+
+### `POST /chat`
+Ask questions about your household energy data or request recommendations.
+
+- **Request**:  
+  ```json
+  {
+    "context": "optional previous chat context",
+    "query": "How much energy did I use last week?"
+  }
+  ```
+- **Response**:  
+  ```json
+  {
+    "status": "success",
+    "answer": "You used 45 kWh last week."
+  }
+  ```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Go](https://golang.org/) 1.18+
+- (Recommended) [Node.js](https://nodejs.org/) for frontend integration/testing
+- HuggingFace API Token for AI model access
+
+### Installation
+
+1. **Clone the repository**  
+    ```bash
+    git clone https://github.com/DumbiFadhil/WattSense2.0.git
+    cd WattSense2.0
+    ```
+
+2. **Install Go dependencies**  
+    ```bash
+    go mod tidy
+    ```
+
+3. **Configure environment variables**  
+    Copy `.env.example` to `.env` and set your HuggingFace API token and other configs.
+
+4. **Run the server**  
+    ```bash
+    go run main.go
+    ```
+    The API will be available at `http://localhost:8080`.
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the root directory:
+
+```
+HUGGINGFACE_TOKEN=your_huggingface_token_here
+PORT=8080
 ```
 
-Untuk contoh, kalian bisa menggunakan file yang telah disiapkan `data-series.csv`.
+---
 
-#### Penggunaan Model AI:
+## Project Structure
 
-Model AI Tapas `tapas-base-finetuned-wtq` akan digunakan untuk memahami data tabel dan membuat prediksi tentang konsumsi energi masa depan. Model ini akan menerima file CSV sebagai input dan menghasilkan data berupa alat yang paling banyak menggunakan energi dan alat yang paling sedikit menggunakan energi.
-
-Contoh untuk interface sudah diberikan di folder `frontend`. Untuk menjalankannya kamu perlu memanggil `npm install` diikuti oleh `npm start`. Interface `frontend` ini akan terkoneksi ke backend pada port `8080`. Lakukan modifikasi jika kamu menggunakan port selain itu.
-
-Interface untuk aplikasi ini pada awalnya menerima satu file upload yang kemudian akan diproses menggunakan `tapas-base-finetuned-wtq` dan langsung memberikan informasi mengenai alat rumah tangga dengan penggunaan listrik tertinggi dan terendah. Tersedia juga satu input field untuk chat. Silahkan dikembangkan sehingga mirip dengan chatbot dimana user bisa bertanya mengenai data-data yang ada di file input.
-
-Silahkan menggunakan model AI dari Hugging Face Hub untuk membuat aplikasi ini lebih menarik, misal-nya dengan menambahkan model AI `microsoft/Phi-3.5-mini-instruct` agar bisa memberikan rekomendasi penghematan energi.
-
-### Constraints
-
-Untuk Frontend tidak dinilai, jadi silahkan berkreasi sekreatif mungkin. Frontend juga boleh digunakan boleh tidak.
-
-Kalian perlu membuat HuggingFace Token terlebih dahulu untuk bisa menggunakan model AI yang terdapat di Huggingface. Token ini kemudian akan kalian simpan pada file .env
-
-Untuk pengerjaan, kalian diberikan file berikut:
-* main.go - Berisi kode utama untuk aplikasi.
-* model/model.go - Berisi struktur data yang digunakan pada aplikasi.
-* repository/fileRepository.go - Berisi process terkait pembacaan, penulisan dan pengecekan file yang diupload.
-* service/ai_service.go - Berisi kode untuk melakukan interaksi dengan AI model.
-* service/file_service.go - Berisi kode untuk melakukan upload file.
-
-Berikut penjelasan mengenai bagian apa yang kalian harus kerjakan.
-**main.go**
-Pada file main.go maka kalian wajib menyelesaikan dua handler yang tersedia, untuk endpoint `/upload` dan `/chat`. Keduanya akan menghasilkan output berupa JSON dengan struktur berikut: {"status": "success",	"answer": "some response"}. Key berupa "status" dan "answer".
-
-Pada endpoint `/upload` maka kalian perlu melakukan proses upload dan analisa data. Jadi ada 2 proses di sini, bukan hanya melakukan upload. Jika berhasil maka akan menghasilkan output dalam bentuk `string`: `From the provided data, here are the Least Electricity: TV and the Most Electricity: EVCar.` Catatan: Output ini hanya contoh berdasarkan `data-series.csv` yang diberikan. Jika kalian membuat data sendiri maka jawabannya bisa jadi berbeda dan bukan `TV` dan/atau `EVCar`.
-
-Pada endpoint `/chat` maka kalian akan melakukan chat dengan model AI. Untuk model AI dibebaskan, untuk referensi, kalian bisa menggunakan `microsoft/Phi-3.5-mini-instruct`.
-
-* service/file_service.go
-Pada service ini, kalian akan mengisi kode untuk function `ProcessFile` dimana function menerima isi dari file dalam bentuk `string` untuk kemudian diproses menjadi `map of string`. Ingat struktur data mengikuti `model.go.`
-
-* service/ai_service.go
-Pada service ini, kalian akan mengisi kode untuk function `AnalyzeData` dan `ChatWithAI` dimana untuk `AnalyzeData` kalian akan berkomunikasi dengan AI model `tapas-base-finetuned-wtq`. Output-nya akan berupa teks jawaban dari AI model.
-Sedangkan untuk `ChatWithAI` maka kalian akan berkomunikasi dengan AI model Chat yang kalian pilih. Output-nya sama berupa teks jawaban dari AI model. Ingat struktur data mengikuti `model.go.`
-
-Silahkan membuat function-function lain yang kalian perlukan.
-
-### Test Case Examples
-
-#### Test Case 1 Valid CSV Data
-
-**Input**:
-
-```txt
-"Name,Age\nJohn,30\nDoe,40"
+```
+WattSense2.0/
+├── main.go
+├── model/
+│   └── model.go
+├── repository/
+│   └── fileRepository.go
+├── service/
+│   ├── ai_service.go
+│   └── file_service.go
+├── test/
+│   └── (unit and integration tests)
+├── data-series.csv
+├── .env.example
+├── go.mod
+└── README.md
 ```
 
-**Expected Output / Behavior**:
+---
 
-{
-    "Name": ["John", "Doe"],
-    "Age": ["30", "40"]
-}
+## Testing
 
-**Explanation**:
+- **Unit tests** are located in the `test/` directory and alongside service files.
+- Run all tests with:
+    ```bash
+    go test ./...
+    ```
 
-Fungsi ProcessFile menerima string dari file CSV sebagai input dan mengembalikan `map` di mana `key`-nya adalah header kolom dan `value`nya adalah data untuk setiap kolom. Dalam hal ini, string CSV input memiliki dua kolom "Name" dan "Age", dan dua baris data "John, 30" dan "Doe, 40". Fungsi ini harus mengembalikan map dengan dua data. Data pertama harus memiliki key "Name" dan value ["John", "Doe"], dan key kedua harus memiliki key "Age" dan value ["30", "40"].
+---
 
-#### Test Case 2 Empty CSV Data
+## Contributing
 
-**Input**:
+1. Fork this repository.
+2. Create your feature branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -am 'Add new feature'`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Open a Pull Request.
 
-```txt
-""
-```
+Follow Go best practices and ensure all tests pass before submitting.
 
-**Expected Output / Behavior**:
+---
 
-Fungsi ini harus mengembalikan error yang mengindikasikan bahwa CSV file tidak ada isinya.
+## License
 
-**Explanation**:
+Distributed under the MIT License. See `LICENSE` for details.
 
-Fungsi ProcessFile menerima string dari file CSV sebagai input dan mengembalikan pesan error karena isi file kosong.
+---
 
-#### Test Case 3 File CSV tidak memiliki header row
+## Contact
 
-**Input**:
+For issues, suggestions, or support, please open an issue or contact [DumbiFadhil](https://github.com/DumbiFadhil).
 
-```txt
-"John,30\nDoe,40"
-```
-
-**Expected Output / Behavior**:
-
-Fungsi ini harus mengembalikan error yang mengindikasikan bahwa CSV file tidak valid karena tidak memiliki header row.
-
-**Explanation**:
-
-Fungsi ProcessFile menerima string dari file CSV sebagai input dan mengembalikan pesan error karena tidak terdapat header row.
-
-#### Test Case 4 Data tidak valid
-
-**Input**:
-
-```txt
-"Name,Age\nJohn,30\nDoe"
-```
-
-**Expected Output / Behavior**:
-
-Fungsi ini harus mengembalikan error yang mengindikasikan bahwa CSV file gagal diproses.
-
-**Explanation**:
-
-Fungsi ProcessFile menerima string dari file CSV sebagai input dan mengembalikan pesan error karena ada kolom yang tidak memiliki isi.
-
-
-#### Test Case 6 AnalyzeData berhasil
-
-**Input**:
-
-```txt
-{
-    "table": {
-        "Name": ["John", "Doe"],
-        "Age": ["30", "40"]
-    },
-    "query": "What is the age of John?"
-    "token": "token"
-}
-```
-
-**Expected Output / Behavior**:
-
-```txt
-30
-```
-
-**Explanation**:
-
-Fungsi AnalyzeData menerima table, query dan Huggingface Token sebagai input dan mengembalikan jawaban berupa dari query "Berapa umur John?". Fungsi ini harus mengembalikan jawaban "30", yang didapatkan dari koordinat [[0, 1]], sel ["30"], dan aggregator.
-
-#### Test Case 7 AnalyzeData dengan data tabel kosong
-
-**Input**:
-
-```txt
-{
-    "table": "",
-    "query": "What is the age of John?"
-    "token": "token"
-}
-```
-
-**Expected Output / Behavior**:
-
-Fungsi ini harus mengembalikan error yang mengindikasikan bahwa data table kosong.
-
-**Explanation**:
-
-Fungsi AnalyzeData menerima table, query dan Huggingface Token sebagai input dan mengembalikan error karena data table kosong.
-
-#### Test Case 8 AnalyzeData gagal mendapatkan response dari AI model
-
-**Input**:
-
-```txt
-{
-    "table": {
-        "Name": ["John", "Doe"],
-        "Age": ["30", "40"]
-    },
-    "query": "What is the age of John?"
-    "token": "token"
-}
-```
-
-**Expected Output / Behavior**:
-
-Fungsi ini harus mengembalikan error yang disebabkan oleh gagal-nya AI model menjawab, bisa karena koneksi internet atau AI model tidak memberikan jawaban. Dimana jawaban dari AI model bukan statusOK.
-
-**Explanation**:
-
-Fungsi AnalyzeData menerima table, query dan Huggingface Token yang valid sebagai input, namun response dari AI model tidak diterima atau gagal diproses baik karena koneksi internet yang terputus atau hal lainnya dan mengembalikan error karena AI model tidak memberikan jawaban yang valid.
-
-#### Test Case 9 ChatWithAI berhasil
-
-**Input**:
-
-```txt
-{
-    "context": "Text from previous conversation",
-    "query": "How much older is John compare with Jane?"
-    "token": "token"
-}
-```
-
-**Expected Output / Behavior**:
-
-```txt
-"Any response from AI model"
-```
-
-**Explanation**:
-
-Fungsi ChatWithAI menerima context, query dan Huggingface Token sebagai input dan mengembalikan jawaban berupa hasil dari query "How much older is John compare with Jane?". Fungsi ini wajib mengembalikan output dari AI model berupa teks.
-
-#### Test Case 10 ChatWithAI gagal
-
-**Input**:
-
-```txt
-{
-    "context": "Text from previous conversation",
-    "query": "How much older is John compare with Jane?"
-    "token": "token"
-}
-```
-
-**Expected Output / Behavior**:
-
-Fungsi ini harus mengembalikan error jika jawaban dari AI model bukan statusOK.
-
-**Explanation**:
-
-Fungsi AnalyzeData menerima context, query dan Huggingface Token sebagai input dan mengembalikan error karena AI model gagal memberikan respons
-
-
-Happy Coding!
+---
