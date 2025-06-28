@@ -2,8 +2,6 @@
 
 Welcome to the backend repository for **WattSense 2.0**, an AI-powered Smart Home Energy Management System. This service is responsible for handling data ingestion, AI-driven analytics, and providing a robust API for the frontend and other clients.
 
-> **Note**: This is the backend codebase for [@DumbiFadhil/WattSense2.0](https://github.com/DumbiFadhil/WattSense2.0). The frontend is maintained in a separate repository: [@DumbiFadhil/WattSenseFE](https://github.com/DumbiFadhil/WattSenseFE).
-
 ---
 
 ## Table of Contents
